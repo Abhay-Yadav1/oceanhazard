@@ -6,7 +6,7 @@
     <title>Ocean Hazards Portal - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
+          * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -536,7 +536,9 @@
                     </div>
                     <a href="#" class="forgot-password" onclick="openForgotPasswordModal()">Forgot Password?</a>
                 </div>
-                <button type="button" class="modal-btn" onclick="login()">Login</button>
+               <div class="btn-container">
+                 <a href="{{ url_for('user.index') }}" class="btn"><span>User Login</span> <i class="fas fa-arrow-right"></i></a>
+              </div>
             </form>
             <div class="modal-footer">
                 <p>Don't have an account? <a href="#" style="color: #3498db;">Contact Administrator</a></p>
