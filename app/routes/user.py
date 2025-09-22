@@ -6,7 +6,9 @@ user_bp = Blueprint('user', __name__, url_prefix='/user')
 def index():
     return render_template('user/index.html')
 
-
+@user_bp.route('/dashboard')
+def dashboard():
+    return render_template('user/userdashboard.html')
 @user_bp.route('/')
 def landing():
     return render_template('Login.html')  

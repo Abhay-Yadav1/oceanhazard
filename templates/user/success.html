@@ -461,13 +461,14 @@
         }
         
         // Button actions
-        document.getElementById('submit-another').addEventListener('click', function() {
-            window.location.href = 'index.html'; // Link back to main reporting page
-        });
+         document.getElementById('submit-another').addEventListener('click', function() {
+        window.location.href = "{{ url_for('user.index') }}"; // Flask route to main reporting page
+    });
         
+       
         document.getElementById('view-dashboard').addEventListener('click', function() {
-            alert('This would navigate to your personal dashboard in a real application.');
-        });
+        window.location.href = "{{ url_for('user.dashboard') }}"; // Change to your dashboard route if available
+    });
     </script>
 </body>
 </html>
