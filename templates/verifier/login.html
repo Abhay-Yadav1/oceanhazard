@@ -6,7 +6,7 @@
     <title>Ocean Hazards Portal - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-          * {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -507,7 +507,7 @@
         </div>
         
         <div class="footer">
-            <p>Indian National Centre for Ocean Information Services (INCOIS) &copy; 2023</p>
+            <p>Indian National Centre for Ocean Information Services (INCOIS) &copy; 2025</p>
             <p>Ocean Hazards Monitoring and Alert System</p>
         </div>
     </div>
@@ -536,9 +536,7 @@
                     </div>
                     <a href="#" class="forgot-password" onclick="openForgotPasswordModal()">Forgot Password?</a>
                 </div>
-               <div class="btn-container">
-                 <a href="user.html" class="btn"><span>User Login</span> <i class="fas fa-arrow-right"></i></a>
-              </div>
+                <button type="button" class="modal-btn" onclick="login()">Login</button>
             </form>
             <div class="modal-footer">
                 <p>Don't have an account? <a href="#" style="color: #3498db;">Contact Administrator</a></p>
@@ -660,11 +658,11 @@
             // Redirect to the appropriate dashboard (simulated)
             setTimeout(() => {
                 if (currentUserType === 'user') {
-                    window.location.href = 'user.html';
+                    window.location.href = 'index.html';
                 } else if (currentUserType === 'official') {
                     window.location.href = 'official.html';
                 } else if (currentUserType === 'verifier') {
-                    window.location.href = 'verifier.html';
+                    window.location.href = 'dashboard.html';
                 }
             }, 1000);
         }
