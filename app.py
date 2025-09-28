@@ -170,8 +170,23 @@ def login():
                     (username, password)
                 )
                 user = cursor.fetchone()
+            elif user_type == 'official':
+                # FIRST check officials table
+                cursor.execute(
+                    "SELECT * FROM officials WHERE username = %s AND password = %s AND is_active = TRUE",
+                    (username, password)
+                )
+                user = cursor.fetchone()
+                
+                # If not found in officials table, check users table as fallback
+                if not user:
+                    cursor.execute(
+                        "SELECT * FROM users WHERE username = %s AND password = %s AND role = 'official'",
+                        (username, password)
+                    )
+                    user = cursor.fetchone()
             else:
-                # Check user/official credentials in users table
+                # Check user credentials in users table
                 cursor.execute(
                     "SELECT * FROM users WHERE username = %s AND password = %s AND role = %s",
                     (username, password, user_type)
@@ -189,6 +204,16 @@ def login():
                     
                     print(f"DEBUG: Verifier login successful - {user['username']}")
                     return redirect('/verifier/dashboard')
+                elif user_type == 'official':
+                    # Set official session variables
+                    session['user_id'] = user['id']
+                    session['username'] = user['username']
+                    session['role'] = 'official'
+                    session['logged_in'] = True
+                    session['official_name'] = user.get('full_name', user['username'])
+                    
+                    print(f"DEBUG: Official login successful - {user['username']}")
+                    return redirect('/official')
                 else:
                     # Set regular user session variables
                     session['user_id'] = user['id']
@@ -200,8 +225,6 @@ def login():
                     
                     if user_type == 'user':
                         return redirect('/user/index')
-                    elif user_type == 'official':
-                        return redirect('/official/dashboard')
             else:
                 print(f"DEBUG: Login failed - Invalid credentials for {user_type}")
                 flash('Invalid username or password', 'error')
@@ -243,18 +266,7 @@ def user_logout():
     session.clear()
     return redirect(url_for('index'))
 
-# Official Routes
-@app.route('/official')
-def official_dashboard():
-    if not session.get('logged_in') or session.get('role') != 'official':
-        return redirect(url_for('index'))
-    return render_template('official/dashboard.html', username=session.get('username'))
 
-@app.route('/official/analytics')
-def official_analytics():
-    if not session.get('logged_in') or session.get('role') != 'official':
-        return redirect(url_for('index'))
-    return render_template('official/analytics.html', username=session.get('username'))
 
 
 
@@ -709,7 +721,281 @@ def verifier_logout():
     session.pop('verifier_logged_in', None)
     session.pop('role', None)
     return redirect('/')
+#official 
 
+
+
+# Official Routes
+@app.route('/official')
+def official_dashboard():
+    if not session.get('logged_in') or session.get('role') != 'official':
+        return redirect('/')
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get stats for official dashboard
+            cursor.execute("SELECT COUNT(*) as count FROM reports WHERE status = 'pending'")
+            pending_reports = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM finalreports WHERE verifier_status = 'approved'")
+            verified_reports = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM finalreports WHERE verifier_status = 'approved' AND DATE(verified_at) = CURDATE()")
+            approved_today = cursor.fetchone()['count']
+            
+            # Get recent verified reports
+            cursor.execute("""
+                SELECT fr.*, u.full_name as user_full_name 
+                FROM finalreports fr 
+                LEFT JOIN users u ON fr.user_id = u.id 
+                WHERE fr.verifier_status = 'approved'
+                ORDER BY fr.verified_at DESC 
+                LIMIT 5
+            """)
+            recent_verified = cursor.fetchall()
+            
+            # Get hazard distribution data
+            cursor.execute("""
+                SELECT hazard_type, COUNT(*) as count 
+                FROM finalreports 
+                WHERE verifier_status = 'approved' 
+                GROUP BY hazard_type
+            """)
+            hazard_distribution = cursor.fetchall()
+            
+            # Get reports timeline data (last 7 days)
+            cursor.execute("""
+                SELECT DATE(verified_at) as date, COUNT(*) as count 
+                FROM finalreports 
+                WHERE verifier_status = 'approved' AND verified_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                GROUP BY DATE(verified_at)
+                ORDER BY date
+            """)
+            timeline_data = cursor.fetchall()
+            
+            return render_template('official/official.html', 
+                                username=session.get('username'),
+                                pending_reports=pending_reports,
+                                verified_reports=verified_reports,
+                                approved_today=approved_today,
+                                recent_verified=recent_verified,
+                                hazard_distribution=hazard_distribution,
+                                timeline_data=timeline_data)
+                
+        except Exception as e:
+            print(f"DEBUG: Official dashboard error - {e}")
+            flash('Error loading official dashboard', 'error')
+            return render_template('official/official.html', 
+                                username=session.get('username'),
+                                pending_reports=0,
+                                verified_reports=0,
+                                approved_today=0,
+                                recent_verified=[],
+                                hazard_distribution=[],
+                                timeline_data=[])
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        flash('Database connection error', 'error')
+        return render_template('official/official.html', 
+                            username=session.get('username'),
+                            pending_reports=0,
+                            verified_reports=0,
+                            approved_today=0,
+                            recent_verified=[],
+                            hazard_distribution=[],
+                            timeline_data=[])
+
+@app.route('/official/analytics')
+def official_analytics():
+    if not session.get('logged_in') or session.get('role') != 'official':
+        return redirect('/')
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get comprehensive analytics data
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_reports,
+                    COUNT(CASE WHEN verifier_status = 'approved' THEN 1 END) as approved_reports,
+                    COUNT(CASE WHEN verifier_status = 'rejected' THEN 1 END) as rejected_reports,
+                    COUNT(CASE WHEN verifier_status = 'under_review' THEN 1 END) as under_review
+                FROM finalreports
+            """)
+            analytics_summary = cursor.fetchone()
+            
+            # Get hazard type distribution
+            cursor.execute("""
+                SELECT hazard_type, COUNT(*) as count 
+                FROM finalreports 
+                GROUP BY hazard_type 
+                ORDER BY count DESC
+            """)
+            hazard_analytics = cursor.fetchall()
+            
+            # Get monthly trend data
+            cursor.execute("""
+                SELECT 
+                    DATE_FORMAT(verified_at, '%Y-%m') as month,
+                    COUNT(*) as count
+                FROM finalreports 
+                WHERE verified_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                GROUP BY DATE_FORMAT(verified_at, '%Y-%m')
+                ORDER BY month
+            """)
+            monthly_trends = cursor.fetchall()
+            
+            # Get top locations
+            cursor.execute("""
+                SELECT location_text, COUNT(*) as count 
+                FROM finalreports 
+                WHERE location_text IS NOT NULL 
+                GROUP BY location_text 
+                ORDER BY count DESC 
+                LIMIT 10
+            """)
+            top_locations = cursor.fetchall()
+            
+            return render_template('official/analytics.html',
+                                username=session.get('username'),
+                                analytics_summary=analytics_summary,
+                                hazard_analytics=hazard_analytics,
+                                monthly_trends=monthly_trends,
+                                top_locations=top_locations)
+                
+        except Exception as e:
+            print(f"DEBUG: Official analytics error - {e}")
+            flash('Error loading analytics', 'error')
+            return render_template('official/analytics.html',
+                                username=session.get('username'),
+                                analytics_summary={},
+                                hazard_analytics=[],
+                                monthly_trends=[],
+                                top_locations=[])
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        flash('Database connection error', 'error')
+        return render_template('official/analytics.html',
+                            username=session.get('username'),
+                            analytics_summary={},
+                            hazard_analytics=[],
+                            monthly_trends=[],
+                            top_locations=[])
+
+# API endpoints for official dashboard
+@app.route('/api/official/stats')
+def official_stats():
+    if not session.get('logged_in') or session.get('role') != 'official':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Real-time stats
+            cursor.execute("SELECT COUNT(*) as count FROM reports WHERE status = 'pending'")
+            pending_reports = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM finalreports WHERE verifier_status = 'approved'")
+            total_verified = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM finalreports WHERE DATE(verified_at) = CURDATE()")
+            verified_today = cursor.fetchone()['count']
+            
+            cursor.execute("SELECT COUNT(*) as count FROM finalreports WHERE verifier_status = 'under_review'")
+            under_review = cursor.fetchone()['count']
+            
+            return jsonify({
+                'success': True,
+                'stats': {
+                    'pending_reports': pending_reports,
+                    'total_verified': total_verified,
+                    'verified_today': verified_today,
+                    'under_review': under_review
+                }
+            })
+                
+        except Exception as e:
+            print(f"DEBUG: Official stats API error - {e}")
+            return jsonify({'success': False, 'error': 'Database error'}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        return jsonify({'success': False, 'error': 'Database connection error'}), 500
+
+@app.route('/api/official/hazard-data')
+def official_hazard_data():
+    if not session.get('logged_in') or session.get('role') != 'official':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get hazard data for map
+            cursor.execute("""
+                SELECT 
+                    latitude, 
+                    longitude, 
+                    hazard_type,
+                    location_text,
+                    verified_at,
+                    CASE 
+                        WHEN hazard_type IN ('coastal_flooding', 'high_waves') THEN 'high'
+                        WHEN hazard_type = 'beach_erosion' THEN 'medium'
+                        ELSE 'low'
+                    END as risk_level
+                FROM finalreports 
+                WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+                AND verifier_status = 'approved'
+                ORDER BY verified_at DESC
+                LIMIT 50
+            """)
+            hazard_data = cursor.fetchall()
+            
+            return jsonify({
+                'success': True,
+                'hazards': hazard_data
+            })
+                
+        except Exception as e:
+            print(f"DEBUG: Official hazard data API error - {e}")
+            return jsonify({'success': False, 'error': 'Database error'}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        return jsonify({'success': False, 'error': 'Database connection error'}), 500
+
+# Update your existing official routes to match
+@app.route('/official/dashboard')
+def official_dashboard_page():
+    return redirect('/official')
+
+@app.route('/official/logout')
+def official_logout():
+    session.clear()
+    return redirect('/')
 
 
 if __name__ == '__main__':
