@@ -96,7 +96,7 @@ def signup():
         flash('Database connection error', 'error')
         return redirect(url_for('index'))
 
-@app.route('/login', methods=['POST'])
+'''@app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
     password = request.form.get('password')
@@ -129,6 +129,7 @@ def login():
                 elif user_type == 'official':
                     return redirect(url_for('official_dashboard'))
                 elif user_type == 'verifier':
+
                     return redirect(url_for('verifier_dashboard'))
             else:
                 print("DEBUG: Login failed - Invalid credentials")
@@ -147,7 +148,77 @@ def login():
         print("DEBUG: Login failed - Database connection error")
         flash('Database connection error', 'error')
         return redirect(url_for('index'))
-
+'''
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    user_type = request.form.get('user_type')
+    
+    print(f"DEBUG: Login attempt - Username: {username}, Type: {user_type}")
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            if user_type == 'verifier':
+                # Check verifier credentials in verifiers table
+                cursor.execute(
+                    "SELECT * FROM verifiers WHERE username = %s AND password = %s AND is_active = TRUE",
+                    (username, password)
+                )
+                user = cursor.fetchone()
+            else:
+                # Check user/official credentials in users table
+                cursor.execute(
+                    "SELECT * FROM users WHERE username = %s AND password = %s AND role = %s",
+                    (username, password, user_type)
+                )
+                user = cursor.fetchone()
+            
+            if user:
+                if user_type == 'verifier':
+                    # Set verifier session variables
+                    session['verifier_id'] = user['id']
+                    session['verifier_username'] = user['username']
+                    session['verifier_name'] = user.get('full_name', user['username'])
+                    session['verifier_logged_in'] = True
+                    session['role'] = 'verifier'
+                    
+                    print(f"DEBUG: Verifier login successful - {user['username']}")
+                    return redirect('/verifier/dashboard')
+                else:
+                    # Set regular user session variables
+                    session['user_id'] = user['id']
+                    session['username'] = user['username']
+                    session['role'] = user['role']
+                    session['logged_in'] = True
+                    
+                    print(f"DEBUG: Login successful - User: {user['username']}, Role: {user['role']}")
+                    
+                    if user_type == 'user':
+                        return redirect('/user/index')
+                    elif user_type == 'official':
+                        return redirect('/official/dashboard')
+            else:
+                print(f"DEBUG: Login failed - Invalid credentials for {user_type}")
+                flash('Invalid username or password', 'error')
+                return redirect('/')
+                
+        except Exception as e:
+            print(f"DEBUG: Login error - {e}")
+            flash('Database error', 'error')
+            return redirect('/')
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        print("DEBUG: Login failed - Database connection error")
+        flash('Database connection error', 'error')
+        return redirect('/')
 # User Routes
 @app.route('/user')
 def user_dashboard():
@@ -185,18 +256,7 @@ def official_analytics():
         return redirect(url_for('index'))
     return render_template('official/analytics.html', username=session.get('username'))
 
-# Verifier Routes
-@app.route('/verifier')
-def verifier_dashboard():
-    if not session.get('logged_in') or session.get('role') != 'verifier':
-        return redirect(url_for('index'))
-    return render_template('verifier/dashboard.html', username=session.get('username'))
 
-@app.route('/verifier/reportdetail')
-def verifier_report_detail():
-    if not session.get('logged_in') or session.get('role') != 'verifier':
-        return redirect(url_for('index'))
-    return render_template('verifier/reportdetail.html', username=session.get('username'))
 
 @app.route('/logout')
 def logout():
@@ -386,6 +446,271 @@ def reset_password():
             return jsonify({'success': False, 'message': 'Database connection error'}), 500
     
     return jsonify({'success': False, 'message': 'Password reset failed'}), 400
+
+
+#Verifier Routes
+from datetime import datetime
+
+# Template filters
+@app.template_filter('get_priority_level')
+def get_priority_level(hazard_type):
+    if hazard_type in ['coastal_flooding', 'high_waves']:
+        return 'high'
+    elif hazard_type == 'beach_erosion':
+        return 'medium'
+    else:
+        return 'low'
+
+@app.template_filter('get_icon')
+def get_icon(hazard_type):
+    icons = {
+        "coastal_flooding": "water",
+        "marine_debris": "trash",
+        "beach_erosion": "mountain",
+        "high_waves": "wave-square",
+        "unusual_tides": "tint",
+        "other": "exclamation-triangle"
+    }
+    return icons.get(hazard_type, "exclamation-triangle")
+
+@app.template_filter('format_hazard_type')
+def format_hazard_type(hazard_type):
+    return hazard_type.replace('_', ' ').title()
+
+@app.template_filter('format_time_ago')
+def format_time_ago(timestamp):
+    if not timestamp:
+        return 'Unknown time'
+    
+    now = datetime.now()
+    diff = now - timestamp
+    
+    if diff.days > 0:
+        return f"{diff.days} days ago"
+    elif diff.seconds // 3600 > 0:
+        return f"{diff.seconds // 3600} hours ago"
+    elif diff.seconds // 60 > 0:
+        return f"{diff.seconds // 60} minutes ago"
+    else:
+        return 'Just now'
+@app.route('/verifier/dashboard')
+def verifier_dashboard():
+    if not session.get('verifier_logged_in'):
+        print(f"DEBUG: Verifier access denied - verifier_logged_in: {session.get('verifier_logged_in')}")
+        return redirect('/')
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get pending reports count from REPORTS table
+            cursor.execute("SELECT COUNT(*) as count FROM reports WHERE status = 'pending'")
+            pending_count_result = cursor.fetchone()
+            pending_count = pending_count_result['count'] if pending_count_result else 0
+            print(f"DEBUG: Pending reports count: {pending_count}")
+            
+            # Get approved today count from FINALREPORTS table
+            today = datetime.now().date()
+            cursor.execute("SELECT COUNT(*) as count FROM final_reports WHERE verifier_status = 'approved' AND DATE(verified_at) = %s", (today,))
+            approved_today_result = cursor.fetchone()
+            approved_today = approved_today_result['count'] if approved_today_result else 0
+            print(f"DEBUG: Approved today: {approved_today}")
+            
+            # Get all pending reports from REPORTS table for verification
+            cursor.execute("""
+                SELECT r.*, u.full_name as user_full_name 
+                FROM reports r 
+                LEFT JOIN users u ON r.user_id = u.id 
+                WHERE r.status = 'pending' 
+                ORDER BY 
+                    CASE 
+                        WHEN r.hazard_type IN ('coastal_flooding', 'high_waves') THEN 1
+                        WHEN r.hazard_type = 'beach_erosion' THEN 2
+                        ELSE 3
+                    END,
+                    r.submitted_at DESC
+            """)
+            pending_reports = cursor.fetchall()
+            print(f"DEBUG: Found {len(pending_reports)} pending reports")
+            for report in pending_reports:
+                print(f"DEBUG: Report ID: {report['id']}, Type: {report['hazard_type']}, Status: {report.get('status', 'N/A')}")
+            
+            # Get recent reports (last 24 hours) from REPORTS table
+            yesterday = datetime.now() - timedelta(hours=24)
+            cursor.execute("""
+                SELECT r.*, u.full_name as user_full_name 
+                FROM reports r 
+                LEFT JOIN users u ON r.user_id = u.id 
+                WHERE r.submitted_at >= %s 
+                ORDER BY r.submitted_at DESC 
+                LIMIT 10
+            """, (yesterday,))
+            recent_reports = cursor.fetchall()
+            print(f"DEBUG: Found {len(recent_reports)} recent reports")
+            
+            return render_template('verifier/dashboard.html', 
+                                verifier_name=session.get('verifier_name'),
+                                pending_count=pending_count,
+                                approved_today=approved_today,
+                                pending_reports=pending_reports,
+                                recent_reports=recent_reports)
+                
+        except Exception as e:
+            print(f"DEBUG: Verifier dashboard error - {e}")
+            flash('Error loading verifier dashboard', 'error')
+            return render_template('verifier/dashboard.html', 
+                                verifier_name=session.get('verifier_name'),
+                                pending_count=0,
+                                approved_today=0,
+                                pending_reports=[],
+                                recent_reports=[])
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        flash('Database connection error', 'error')
+        return render_template('verifier/dashboard.html', 
+                            verifier_name=session.get('verifier_name'),
+                            pending_count=0,
+                            approved_today=0,
+                            pending_reports=[],
+                            recent_reports=[])
+@app.route('/verifier/verify_report/<int:report_id>', methods=['GET'])
+def verify_report_page(report_id):
+    if not session.get('verifier_logged_in'):
+        print(f"DEBUG: Verifier not logged in for report {report_id}")
+        return redirect('/')
+    
+    print(f"DEBUG: Loading verification page for report {report_id}")
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the report details
+            cursor.execute("""
+                SELECT r.*, u.full_name as user_full_name, u.email as user_email 
+                FROM reports r 
+                LEFT JOIN users u ON r.user_id = u.id 
+                WHERE r.id = %s
+            """, (report_id,))
+            report = cursor.fetchone()
+            
+            print(f"DEBUG: Query executed for report {report_id}")
+            print(f"DEBUG: Report found: {report is not None}")
+            
+            if not report:
+                print(f"DEBUG: Report {report_id} not found in database")
+                flash('Report not found', 'error')
+                return redirect('/verifier/dashboard')
+            
+            print(f"DEBUG: Successfully loaded report {report_id}: {report['hazard_type']} by {report.get('user_full_name', 'Unknown')}")
+            
+            return render_template('verifier/verify_report.html', 
+                                report=report,
+                                verifier_name=session.get('verifier_name'))
+                
+        except Exception as e:
+            print(f"DEBUG: Get report error - {e}")
+            import traceback
+            print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+            flash('Error loading report', 'error')
+            return redirect('/verifier/dashboard')
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        print("DEBUG: Database connection failed")
+        flash('Database connection error', 'error')
+        return redirect('/verifier/dashboard')
+
+@app.route('/verifier/submit_verification/<int:report_id>', methods=['POST'])
+def submit_verification(report_id):
+    if not session.get('verifier_logged_in'):
+        return redirect('/')
+    
+    verification_status = request.form.get('verification_status')
+    comments = request.form.get('comments', '')
+    
+    print(f"DEBUG: Verifier action - Report: {report_id}, Status: {verification_status}, Verifier: {session.get('verifier_username')}")
+    
+    connection = get_db_connection()
+    if connection:
+        cursor = None
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the report data from REPORTS table
+            cursor.execute("SELECT * FROM reports WHERE id = %s", (report_id,))
+            report_data = cursor.fetchone()
+            
+            if not report_data:
+                flash('Report not found', 'error')
+                return redirect('/verifier/dashboard')
+            
+            # Map action to final status
+            status_mapping = {
+                'confident': 'approved',
+                'likely': 'approved', 
+                'unsure': 'under_review',
+                'doubtful': 'rejected',
+                'fake': 'rejected',
+                'needs_evidence': 'under_review',
+                'escalate': 'under_review'  # escalated goes to under_review for senior review
+            }
+            
+            final_status = status_mapping.get(verification_status, 'under_review')
+            
+            # Insert into FINALREPORTS table with verification status
+            cursor.execute("""
+                INSERT INTO final_reports 
+                (user_id, username, hazard_type, description, latitude, longitude, location_text, 
+                 status, verifier_status, verifier_comments, verified_by, verified_at, submitted_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+            """, (
+                report_data['user_id'], report_data['username'], report_data['hazard_type'], 
+                report_data['description'], report_data['latitude'], report_data['longitude'], 
+                report_data['location_text'], 'verified', final_status, comments, 
+                session.get('verifier_username'), report_data['submitted_at']
+            ))
+            
+            # Update the report status in REPORTS table to 'verified'
+            cursor.execute("UPDATE reports SET status = 'verified', verified_at = NOW(), verifier_id = %s WHERE id = %s", 
+                         (session.get('verifier_id'), report_id))
+            
+            connection.commit()
+            
+            flash(f'Report successfully verified and marked as {final_status}', 'success')
+            print(f"DEBUG: Report {report_id} verified by {session.get('verifier_username')} and moved to finalreports")
+            return redirect('/verifier/dashboard')
+                
+        except Exception as e:
+            print(f"DEBUG: Verify report error - {e}")
+            flash('Error processing verification', 'error')
+            return redirect(f'/verifier/verify_report/{report_id}')
+        finally:
+            if cursor:
+                cursor.close()
+            connection.close()
+    else:
+        flash('Database connection error', 'error')
+        return redirect('/verifier/dashboard')
+@app.route('/verifier/logout')
+def verifier_logout():
+    session.pop('verifier_id', None)
+    session.pop('verifier_username', None)
+    session.pop('verifier_name', None)
+    session.pop('verifier_logged_in', None)
+    session.pop('role', None)
+    return redirect('/')
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

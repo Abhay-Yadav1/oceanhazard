@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Report - Coastal Hazard Verifier</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/verifierdashboard.css">
+    <link rel="stylesheet" href="/static/css/report_verify.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-shield-alt logo-icon"></i>
+                <div class="logo-text">Verify Report</div>
+            </div>
+            <div class="user-actions">
+                <a href="/verifier/dashboard" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </header>
+        
+        <div class="verify-report-container">
+            <h2 class="page-title">Report Verification</h2>
+            
+            <div class="report-details">
+                <div class="detail-group">
+                    <label>Hazard Type</label>
+                    <p>{{ report.hazard_type|format_hazard_type }}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Priority</label>
+                    <p>{{ report.hazard_type|get_priority_level|title }}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Location</label>
+                    <p>{{ report.location_text or (report.latitude|string + ', ' + report.longitude|string) }}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Submitted By</label>
+                    <p>{{ report.user_full_name or report.username or 'Anonymous User' }}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Submitted</label>
+                    <p>{{ report.submitted_at.strftime('%b %d, %Y %H:%M') if report.submitted_at else 'Unknown' }}</p>
+                </div>
+                <div class="detail-group full-width">
+                    <label>Description</label>
+                    <p>{{ report.description or 'No description provided' }}</p>
+                </div>
+            </div>
+
+            <form method="POST" action="/verifier/submit_verification/{{ report.id }}" class="verification-form">
+                <div class="verification-section">
+                    <h3>Verification Status</h3>
+                    <div class="form-group">
+                        <label for="verification-status">Select Verification Status:</label>
+                        <select id="verification-status" name="verification_status" class="form-control" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="confident">✅ Confident - Clearly Valid</option>
+                            <option value="likely">👍 Likely - Probably Valid</option>
+                            <option value="unsure">🤔 Unsure - Needs More Review</option>
+                            <option value="doubtful">❓ Doubtful - Probably Invalid</option>
+                            <option value="fake">❌ Fake - Clearly Invalid</option>
+                            <option value="needs_evidence">📋 Needs More Evidence</option>
+                            <option value="escalate">🚨 Escalate - Requires Senior Review</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="comments">Additional Comments:</label>
+                        <textarea id="comments" name="comments" class="form-control" rows="3" placeholder="Add any additional comments or observations..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-paper-plane"></i> Submit Verification
+                    </button>
+                    <a href="/verifier/dashboard" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
