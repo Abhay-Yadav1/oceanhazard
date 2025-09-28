@@ -5,451 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ocean Hazards Portal - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(to bottom, #e6f0ff, #cce0ff, #b3d1ff);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            color: #333;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        /* Subtle Water Wave Effect */
-        .waves {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.6;
-        }
-        
-        .wave {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 200%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V90.72C48.86,112.15,101.45,119.23,153.79,116.42,219.36,113.18,282.52,95.29,321.39,56.44Z" fill="%23a8d1ff"></path></svg>');
-            background-size: 50% 100%;
-            transform-origin: center bottom;
-        }
-        
-        .wave1 {
-            animation: wave-animation 25s linear infinite;
-            opacity: 0.4;
-            background-position: 0 80%;
-        }
-        
-        .wave2 {
-            animation: wave-animation 20s linear infinite;
-            animation-delay: -5s;
-            opacity: 0.3;
-            background-position: 0 60%;
-            background-size: 55% 100%;
-        }
-        
-        .wave3 {
-            animation: wave-animation 15s linear infinite;
-            animation-delay: -2s;
-            opacity: 0.2;
-            background-position: 0 40%;
-            background-size: 60% 100%;
-        }
-        
-        @keyframes wave-animation {
-            0% {
-                transform: translateX(0);
-            }
-            50% {
-                transform: translateX(-25%);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            text-align: center;
-            z-index: 2;
-            position: relative;
-        }
-        
-        .header {
-            margin-bottom: 40px;
-            color: #2c3e50;
-        }
-        
-        .header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        
-        .header p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-            color: #34495e;
-        }
-        
-        .login-options {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin-top: 30px;
-        }
-        
-        .login-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 12px;
-            overflow: hidden;
-            width: 320px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .login-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card-header {
-            padding: 25px 20px;
-            color: white;
-        }
-        
-        .card-header i {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        
-        .card-header h2 {
-            font-size: 1.6rem;
-            font-weight: 600;
-        }
-        
-        .user .card-header {
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-        }
-        
-        .official .card-header {
-            background: linear-gradient(135deg, #2980b9, #34495e);
-        }
-        
-        .verifier .card-header {
-            background: linear-gradient(135deg, #1abc9c, #16a085);
-        }
-        
-        .card-body {
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-        
-        .card-body p {
-            margin-bottom: 20px;
-            line-height: 1.5;
-            color: #555;
-            flex-grow: 1;
-        }
-        
-        .btn-container {
-            margin-top: auto;
-            display: flex;
-            justify-content: center;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 28px;
-            color: white;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            position: relative;
-            overflow: hidden;
-            min-width: 160px;
-        }
-        
-        .btn span {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .btn i {
-            margin-left: 8px;
-            transition: transform 0.3s ease;
-            font-size: 0.9rem;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn:hover i {
-            transform: translateX(4px);
-        }
-        
-        .user .btn {
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-        }
-        
-        .official .btn {
-            background: linear-gradient(135deg, #2980b9, #34495e);
-        }
-        
-        .verifier .btn {
-            background: linear-gradient(135deg, #1abc9c, #16a085);
-        }
-        
-        .btn:hover {
-            opacity: 0.95;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .footer {
-            margin-top: 50px;
-            color: #2c3e50;
-            font-size: 0.9rem;
-        }
-        
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-            animation: modalFadeIn 0.3s;
-        }
-        
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #777;
-            transition: color 0.3s;
-        }
-        
-        .close-modal:hover {
-            color: #333;
-        }
-        
-        .modal-header {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .modal-header h2 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .modal-header p {
-            color: #7f8c8d;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-        }
-        
-        .remember-me input {
-            margin-right: 8px;
-        }
-        
-        .forgot-password {
-            color: #3498db;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .forgot-password:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-        
-        .modal-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .modal-btn:hover {
-            background: linear-gradient(135deg, #2980b9, #2573a7);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        
-        .modal-footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #7f8c8d;
-        }
-        
-        .otp-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        
-        .otp-input {
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            font-size: 1.2rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        .otp-input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .resend-otp {
-            color: #3498db;
-            cursor: pointer;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .resend-otp:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-        
-        @media (max-width: 1000px) {
-            .login-options {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .login-card {
-                width: 100%;
-                max-width: 400px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/login.css">
 </head>
 <body>
     <!-- Subtle Water Wave Background -->
@@ -475,6 +31,7 @@
                     <p>Access ocean hazard forecasts, alerts, and safety information for your region.</p>
                     <div class="btn-container">
                         <a href="#" class="btn" onclick="openLoginModal('user')"><span>User Login</span> <i class="fas fa-arrow-right"></i></a>
+                        <a href="#" class="btn btn-signup" onclick="openSignupModal()"><span>Sign Up</span> <i class="fas fa-user-plus"></i></a>
                     </div>
                 </div>
             </div>
@@ -512,6 +69,59 @@
         </div>
     </div>
 
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('signupModal')">&times;</span>
+            <div class="modal-header">
+                <h2>Create User Account</h2>
+                <p>Sign up to report coastal hazards and access ocean safety information</p>
+            </div>
+            <form id="signupForm" action="{{ url_for('signup') }}" method="POST">
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" name="username" class="form-control" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" class="form-control" placeholder="Create a password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirm_password" class="form-control" placeholder="Confirm your password" required>
+                </div>
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="full_name" class="form-control" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="Enter your phone number">
+                </div>
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" class="form-control" placeholder="Enter your city/region">
+                </div>
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="terms" required>
+                        <label for="terms">I agree to the <a href="#" style="color: #3498db;">Terms of Service</a> and <a href="#" style="color: #3498db;">Privacy Policy</a></label>
+                    </div>
+                </div>
+                <div class="btn-container">
+                    <button type="submit" class="btn"><span>Create Account</span> <i class="fas fa-user-plus"></i></button>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <p>Already have an account? <a href="#" style="color: #3498db;" onclick="openLoginModal('user')">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Login Modal -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
@@ -520,14 +130,15 @@
                 <h2 id="modalTitle">Login to Portal</h2>
                 <p>Enter your credentials to access the system</p>
             </div>
-            <form id="loginForm">
+            <form id="loginForm" action="{{ url_for('login') }}" method="POST">
+                <input type="hidden" id="user_type" name="user_type" value="">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" class="form-control" placeholder="Enter your username" required>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
                 </div>
                 <div class="form-options">
                     <div class="remember-me">
@@ -536,12 +147,12 @@
                     </div>
                     <a href="#" class="forgot-password" onclick="openForgotPasswordModal()">Forgot Password?</a>
                 </div>
-               <div class="btn-container">
-                 <a href="{{ url_for('user.index') }}" class="btn"><span>User Login</span> <i class="fas fa-arrow-right"></i></a>
-              </div>
+                <div class="btn-container">
+                    <button type="submit" class="btn"><span>Login</span> <i class="fas fa-arrow-right"></i></button>
+                </div>
             </form>
             <div class="modal-footer">
-                <p>Don't have an account? <a href="#" style="color: #3498db;">Contact Administrator</a></p>
+                <p>Don't have an account? <a href="#" style="color: #3498db;" onclick="openSignupModal()">Sign up here</a></p>
             </div>
         </div>
     </div>
@@ -612,13 +223,18 @@
     <script>
         // Global variables
         let currentUserType = '';
-        let generatedOTP = '';
         let userEmail = '';
+
+        // Open signup modal
+        function openSignupModal() {
+            document.getElementById('signupModal').style.display = 'flex';
+        }
 
         // Open login modal for specific user type
         function openLoginModal(userType) {
             currentUserType = userType;
             const modalTitle = document.getElementById('modalTitle');
+            document.getElementById('user_type').value = userType;
             
             if (userType === 'user') {
                 modalTitle.textContent = 'Login as User';
@@ -642,32 +258,17 @@
             document.getElementById('forgotPasswordModal').style.display = 'flex';
         }
 
-        // Login function
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+        // Password confirmation validation
+        document.getElementById('signupForm')?.addEventListener('submit', function(e) {
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
             
-            if (!username || !password) {
-                alert('Please enter both username and password');
-                return;
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match. Please try again.');
+                return false;
             }
-            
-            // In a real application, this would be an API call to verify credentials
-            // For demo purposes, we'll simulate a successful login
-            alert(`Login successful as ${currentUserType}! Redirecting to dashboard...`);
-            closeModal('loginModal');
-            
-            // Redirect to the appropriate dashboard (simulated)
-            setTimeout(() => {
-                if (currentUserType === 'user') {
-                    window.location.href = 'user.html';
-                } else if (currentUserType === 'official') {
-                    window.location.href = 'official.html';
-                } else if (currentUserType === 'verifier') {
-                    window.location.href = 'verifier.html';
-                }
-            }, 1000);
-        }
+        });
 
         // Send verification code
         function sendVerificationCode() {
@@ -678,15 +279,27 @@
                 return;
             }
             
-            // Generate a random 6-digit OTP
-            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-            
-            // In a real application, this would send an email to the user
-            // For demo purposes, we'll just show an alert with the OTP
-            alert(`Verification code sent to ${userEmail}. In a real application, this would be sent via email.\n\nYour verification code is: ${generatedOTP}`);
-            
-            closeModal('forgotPasswordModal');
-            document.getElementById('otpModal').style.display = 'flex';
+            fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userEmail })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Verification code sent to ${userEmail}. Your OTP: ${data.otp}`);
+                    closeModal('forgotPasswordModal');
+                    document.getElementById('otpModal').style.display = 'flex';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
         }
 
         // Move to next OTP input field
@@ -700,11 +313,25 @@
 
         // Resend OTP
         function resendOTP() {
-            // Generate a new OTP
-            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-            
-            // In a real application, this would resend an email to the user
-            alert(`New verification code sent to ${userEmail}. In a real application, this would be sent via email.\n\nYour new verification code is: ${generatedOTP}`);
+            fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userEmail })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`New verification code sent to ${userEmail}. Your OTP: ${data.otp}`);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
         }
 
         // Verify OTP
@@ -716,12 +343,26 @@
                 enteredOTP += input.value;
             });
             
-            if (enteredOTP === generatedOTP) {
-                closeModal('otpModal');
-                document.getElementById('newPasswordModal').style.display = 'flex';
-            } else {
-                alert('Invalid verification code. Please try again.');
-            }
+            fetch('/api/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userEmail, otp: enteredOTP })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal('otpModal');
+                    document.getElementById('newPasswordModal').style.display = 'flex';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
         }
 
         // Update password
@@ -739,92 +380,41 @@
                 return;
             }
             
-            // In a real application, this would update the password in the database
-            alert('Password updated successfully! You can now login with your new password.');
-            closeModal('newPasswordModal');
-            
-            // Clear the OTP inputs
-            const otpInputs = document.querySelectorAll('.otp-input');
-            otpInputs.forEach(input => {
-                input.value = '';
+            fetch('/api/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: userEmail, new_password: newPassword })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password updated successfully! You can now login with your new password.');
+                    closeModal('newPasswordModal');
+                    
+                    // Clear the OTP inputs
+                    const otpInputs = document.querySelectorAll('.otp-input');
+                    otpInputs.forEach(input => {
+                        input.value = '';
+                    });
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
             });
         }
 
-        // Enhance wave animation with JavaScript for more dynamic effect
-        document.addEventListener('DOMContentLoaded', function() {
-            const waves = document.querySelector('.waves');
-            
-            // Adjust wave opacity based on time of day (simulated)
-            function adjustWaveAppearance() {
-                const hours = new Date().getHours();
-                const isDaytime = hours > 6 && hours < 20;
-                
-                document.body.style.background = isDaytime 
-                    ? 'linear-gradient(to bottom, #e6f0ff, #cce0ff, #b3d1ff)' 
-                    : 'linear-gradient(to bottom, #d4e4ff, #b8d4ff, #9cc4ff)';
-                
-                const waveElements = document.querySelectorAll('.wave');
-                waveElements.forEach(wave => {
-                    wave.style.opacity = isDaytime ? 0.6 : 0.4;
-                });
-            }
-            
-            // Initial adjustment
-            adjustWaveAppearance();
-            
-            // Add interactive effect to cards on mouse move
-            const cards = document.querySelectorAll('.login-card');
-            
-            document.addEventListener('mousemove', function(e) {
-                const x = e.clientX / window.innerWidth;
-                const y = e.clientY / window.innerHeight;
-                
-                // Move waves slightly with mouse for parallax effect
-                const wave1 = document.querySelector('.wave1');
-                const wave2 = document.querySelector('.wave2');
-                const wave3 = document.querySelector('.wave3');
-                
-                wave1.style.transform = `translateX(${-50 - x * 5}%) translateY(${y * 5}px)`;
-                wave2.style.transform = `translateX(${-50 - x * 3}%) translateY(${y * 3}px)`;
-                wave3.style.transform = `translateX(${-50 - x * 2}%) translateY(${y * 2}px)`;
-                
-                // Tilt cards slightly based on mouse position
-                cards.forEach(card => {
-                    const cardRect = card.getBoundingClientRect();
-                    const cardX = (cardRect.left + cardRect.width / 2) / window.innerWidth;
-                    const cardY = (cardRect.top + cardRect.height / 2) / window.innerHeight;
-                    
-                    const distanceX = x - cardX;
-                    const distanceY = y - cardY;
-                    
-                    card.style.transform = `translateY(-5px) rotateY(${distanceX * 3}deg) rotateX(${distanceY * -3}deg)`;
-                });
-            });
-            
-            // Reset card transform when mouse leaves document
-            document.addEventListener('mouseleave', function() {
-                cards.forEach(card => {
-                    card.style.transform = 'translateY(-5px)';
-                });
-                
-                // Reset wave positions
-                const wave1 = document.querySelector('.wave1');
-                const wave2 = document.querySelector('.wave2');
-                const wave3 = document.querySelector('.wave3');
-                
-                wave1.style.transform = 'translateX(0)';
-                wave2.style.transform = 'translateX(0)';
-                wave3.style.transform = 'translateX(0)';
-            });
-            
-            // Close modal when clicking outside
-            window.addEventListener('click', function(e) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                    }
-                });
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
             });
         });
     </script>
