@@ -9,10 +9,10 @@ app.secret_key = 'your_secret_key_here'
 
 # MySQL Database Configuration
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'ocean_hazards_db',
+    'host': os.environ.get('MYSQL_HOST', 'localhost'),
+    'user': os.environ.get('MYSQL_USER', 'root'),
+    'password': os.environ.get('MYSQL_PASSWORD', 'root'),
+    'database': os.environ.get('MYSQL_DATABASE', 'ocean_hazards_db'),
     'auth_plugin': 'mysql_native_password'
 }
 
