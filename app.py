@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import random
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = os.environ.get('SECRET_KEY', 'your_strong_secret_key_here')
 
 # MySQL Database Configuration
 db_config = {
@@ -999,4 +999,4 @@ def official_logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
