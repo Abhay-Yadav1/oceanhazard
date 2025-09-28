@@ -12,19 +12,7 @@
     <div class="wave"></div>
     <div class="wave"></div>
     
-    <!-- Notification Center -->
-    <div class="notification-center" id="notification-center"></div>
-    
-    <!-- Disaster Info Panel -->
-    <div class="disaster-info" id="disaster-info">
-        <div class="disaster-header">
-            <div class="disaster-title">⚠️ Active Disaster Alert</div>
-            <button class="disaster-close" id="disaster-close">&times;</button>
-        </div>
-        <div class="disaster-content" id="disaster-content">
-            High wave warning issued for Southern California coast. Expected wave heights of 8-12 feet through tomorrow.
-        </div>
-    </div>
+ 
     
     <div class="container">
         <header>
@@ -33,13 +21,12 @@
                 <div class="logo-text">Coastal Hazard Verifier</div>
             </div>
             <div class="user-actions">
-                <button class="btn btn-primary" id="profile-btn"><i class="fas fa-user"></i> Verifier Profile</button>
-                
-
-
-             <a href="login.html" class="btn btn-primary">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
+                <a href="/verifier/profile" class="btn btn-primary">
+                    <i class="fas fa-user"></i> Verifier Profile
+                </a>
+                <a href="/verifier/logout" class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </header>
         
@@ -47,49 +34,14 @@
             <div class="sidebar">
                 <h2 class="sidebar-title">Verification Dashboard</h2>
                 
-                <div class="filters">
-                    <div class="filter-group">
-                        <label for="hazard-filter">Hazard Type</label>
-                        <select id="hazard-filter">
-                            <option value="all">All Hazards</option>
-                            <option value="flooding">Coastal Flooding</option>
-                            <option value="waves">High Waves</option>
-                            <option value="tides">Unusual Tides</option>
-                            <option value="erosion">Beach Erosion</option>
-                            <option value="debris">Marine Debris</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="priority-filter">Priority Level</label>
-                        <select id="priority-filter">
-                            <option value="all">All Priorities</option>
-                            <option value="high">High Priority</option>
-                            <option value="medium">Medium Priority</option>
-                            <option value="low">Low Priority</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="status-filter">Verification Status</label>
-                        <select id="status-filter">
-                            <option value="all">All Reports</option>
-                            <option value="pending">Pending Review</option>
-                            <option value="verified">Verified</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                    </div>
-                </div>
-                
                 <div class="stats">
                     <div class="stat-item">
                         <span>Pending Reviews</span>
-                        <span class="stat-value">12</span>
+                        <span class="stat-value">{{ pending_count }}</span>
                     </div>
                     <div class="stat-item">
-                        <span>Verified Today</span>
-                        <span class="stat-value">8</span>
+                        <span>Approved Today</span>
+                        <span class="stat-value">{{ approved_today }}</span>
                     </div>
                     <div class="stat-item">
                         <span>Avg. Response Time</span>
@@ -104,23 +56,46 @@
             
             <div class="main-content">
                 <div class="welcome-banner">
-                    <h2 class="banner-title">Welcome, Coastal Verifier!</h2>
-                    <p class="banner-subtitle">You have <strong>12 reports</strong> awaiting verification. Your work helps protect our coastal environments.</p>
+                    <h2 class="banner-title">Welcome, {{ verifier_name }}!</h2>
+                    <p class="banner-subtitle">You have <strong>{{ pending_count }} reports</strong> awaiting verification. Your work helps protect our coastal environments.</p>
                     <div class="report-actions">
-                        <button class="btn btn-primary" id="refresh-btn"><i class="fas fa-sync-alt"></i> Refresh Reports</button>
-                        <button class="btn btn-primary" id="export-btn"><i class="fas fa-download"></i> Export Data</button>
-                        <button class="btn btn-primary" id="simulate-btn"><i class="fas fa-bell"></i> Simulate New Report</button>
+                        <a href="/verifier/dashboard" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh Reports
+                        </a>
                     </div>
                 </div>
                 
                 <!-- User Reports Section -->
                 <div class="user-reports-section">
                     <div class="section-header">
-                        <h3 class="section-title">Recently Submitted Reports</h3>
-                        <span class="stat-value">12 New Reports</span>
+                        <h3 class="section-title">Recently Submitted Reports (Last 24 Hours)</h3>
+                        <span class="stat-value">{{ recent_reports|length }} New Reports</span>
                     </div>
-                    <div class="user-reports-grid" id="user-reports-container">
-                        <!-- User reports will be inserted here -->
+                    <div class="user-reports-grid">
+                        {% if recent_reports %}
+                            {% for report in recent_reports %}
+                                <div class="user-report-card priority-{{ report.hazard_type|get_priority_level }}">
+                                    <div class="user-report-header">
+                                        <div class="user-report-type">
+                                            <i class="fas fa-{{ report.hazard_type|get_icon }}"></i>
+                                            {{ report.hazard_type|format_hazard_type }}
+                                        </div>
+                                        <div class="user-report-priority">
+                                            {{ report.hazard_type|get_priority_level|upper }} PRIORITY
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="user-report-desc">{{ report.description or 'No description provided' }}</p>
+                                    
+                                    <div class="user-report-meta">
+                                        <span><i class="far fa-clock"></i> {{ report.submitted_at|format_time_ago }}</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ report.location_text or (report.latitude|string + ', ' + report.longitude|string) }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="no-reports">No recent reports in the last 24 hours</div>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -129,424 +104,43 @@
                     <h3 class="section-title">Reports Awaiting Verification</h3>
                     <span class="stat-value">Priority Order</span>
                 </div>
-                <div class="reports-grid" id="reports-container">
-                    <!-- Reports will be dynamically inserted here -->
+                <div class="reports-grid">
+                    {% if pending_reports %}
+                        {% for report in pending_reports %}
+                            <div class="report-card priority-{{ report.hazard_type|get_priority_level }}">
+                                <div class="report-header">
+                                    <div class="report-type">
+                                        <i class="fas fa-{{ report.hazard_type|get_icon }}"></i>
+                                        {{ report.hazard_type|format_hazard_type }}
+                                    </div>
+                                    <div class="report-priority">
+                                        {{ report.hazard_type|get_priority_level|upper }} PRIORITY
+                                    </div>
+                                </div>
+                                
+                                <div class="report-content">
+                                    <p class="report-desc">{{ report.description or 'No description provided' }}</p>
+                                    
+                                    <div class="report-meta">
+                                        <span><i class="far fa-clock"></i> {{ report.submitted_at|format_time_ago }}</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ report.location_text or (report.latitude|string + ', ' + report.longitude|string) }}</span>
+                                        <span><i class="fas fa-user"></i> {{ report.user_full_name or report.username or 'Anonymous User' }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="report-actions">
+                                    <a href="/verifier/verify_report/{{ report.id }}" class="action-btn btn-primary">
+                                        <i class="fas fa-eye"></i> Verify Report
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-reports">No reports pending verification. Great job!</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Report Detail Modal -->
-    <div class="modal" id="report-modal">
-        <div class="modal-content">
-            <button class="modal-close" id="modal-close">&times;</button>
-            <h2 class="modal-title">Report Details</h2>
-            
-            <div class="modal-media" id="modal-media">
-                <!-- Media will be inserted here -->
-            </div>
-            
-            <div class="modal-details">
-                <div class="detail-group">
-                    <label>Hazard Type</label>
-                    <p id="modal-type">Coastal Flooding</p>
-                </div>
-                <div class="detail-group">
-                    <label>Priority</label>
-                    <p id="modal-priority">High</p>
-                </div>
-                <div class="detail-group">
-                    <label>Location</label>
-                    <p id="modal-location">34.019454, -118.491191</p>
-                </div>
-                <div class="detail-group">
-                    <label>Submitted</label>
-                    <p id="modal-date">Sept 20, 2023 14:23</p>
-                </div>
-                <div class="detail-group" style="grid-column: 1 / -1;">
-                    <label>Description</label>
-                    <p id="modal-desc">Significant flooding observed along the coastline with water levels reaching approximately 2 feet above normal. Several beach access points are currently inaccessible.</p>
-                </div>
-                <div class="detail-group" style="grid-column: 1 / -1;">
-                    <label>AI Analysis</label>
-                    <p id="modal-ai">Our deep learning model has classified this report as high-confidence (92% match with coastal flooding patterns).</p>
-                </div>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="btn btn-success" id="verify-btn"><i class="fas fa-check"></i> Verify Report</button>
-                <button class="btn btn-danger" id="reject-btn"><i class="fas fa-times"></i> Reject Report</button>
-                <button class="btn btn-warning" id="escalate-btn"><i class="fas fa-exclamation-triangle"></i> Escalate</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Sample report data
-        const reports = [
-            {
-                id: 1,
-                type: "Coastal Flooding",
-                priority: "high",
-                description: "Significant flooding observed along the coastline with water levels reaching approximately 2 feet above normal.",
-                date: "Sept 20, 2023 14:23",
-                location: "34.019454, -118.491191",
-                status: "pending",
-                media: 2,
-                aiConfidence: "92%"
-            },
-            {
-                id: 2,
-                type: "Marine Debris",
-                priority: "medium",
-                description: "Large accumulation of plastic waste washed ashore after recent storms.",
-                date: "Sept 19, 2023 09:47",
-                location: "34.028761, -118.481092",
-                status: "pending",
-                media: 1,
-                aiConfidence: "87%"
-            },
-            {
-                id: 3,
-                type: "Beach Erosion",
-                priority: "high",
-                description: "Noticeable sand loss along north beach area, exposing underlying rocks.",
-                date: "Sept 18, 2023 16:15",
-                location: "34.025432, -118.495673",
-                status: "pending",
-                media: 3,
-                aiConfidence: "95%"
-            },
-            {
-                id: 4,
-                type: "High Waves",
-                priority: "medium",
-                description: "Unusually high waves causing damage to coastal structures.",
-                date: "Sept 17, 2023 11:32",
-                location: "34.022189, -118.488765",
-                status: "pending",
-                media: 2,
-                aiConfidence: "89%"
-            }
-        ];
-        
-        // User reports data (smaller cards)
-        const userReports = [
-            {
-                id: 101,
-                type: "Coastal Flooding",
-                priority: "high",
-                description: "Water levels rising rapidly at Venice Beach",
-                date: "10 min ago",
-                location: "Venice Beach"
-            },
-            {
-                id: 102,
-                type: "Marine Debris",
-                priority: "medium",
-                description: "Plastic bottles and fishing nets washed up",
-                date: "25 min ago",
-                location: "Santa Monica Pier"
-            },
-            {
-                id: 103,
-                type: "Beach Erosion",
-                priority: "high",
-                description: "Cliff erosion threatening coastal path",
-                date: "1 hour ago",
-                location: "Point Dume"
-            },
-            {
-                id: 104,
-                type: "Unusual Tides",
-                priority: "medium",
-                description: "Tide levels 3 feet above prediction",
-                date: "2 hours ago",
-                location: "Malibu Lagoon"
-            },
-            {
-                id: 105,
-                type: "High Waves",
-                priority: "high",
-                description: "Waves crashing over seawall",
-                date: "3 hours ago",
-                location: "El Matador Beach"
-            },
-            {
-                id: 106,
-                type: "Marine Debris",
-                priority: "low",
-                description: "Small plastic accumulation near rocks",
-                date: "4 hours ago",
-                location: "Zuma Beach"
-            }
-        ];
-        
-        // Render user reports (small cards)
-        function renderUserReports() {
-            const container = document.getElementById('user-reports-container');
-            container.innerHTML = '';
-            
-            userReports.forEach(report => {
-                const card = document.createElement('div');
-                card.className = 'user-report-card';
-                card.innerHTML = `
-                    <div class="user-report-header">
-                        <div class="user-report-type">
-                            <i class="fas fa-${getIconForType(report.type)}"></i>
-                            ${report.type}
-                        </div>
-                        <div class="user-report-priority priority-${report.priority}">
-                            ${report.priority.toUpperCase()}
-                        </div>
-                    </div>
-                    
-                    <p class="user-report-desc">${report.description}</p>
-                    
-                    <div class="user-report-meta">
-                        <span><i class="far fa-clock"></i> ${report.date}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> ${report.location}</span>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
-        }
-        
-        // Render reports for verification
-        function renderReports() {
-            const container = document.getElementById('reports-container');
-            container.innerHTML = '';
-            
-            reports.forEach(report => {
-                const card = document.createElement('div');
-                card.className = 'report-card';
-                card.innerHTML = `
-                    <div class="report-header">
-                        <div class="report-type">
-                            <i class="fas fa-${getIconForType(report.type)}"></i>
-                            ${report.type}
-                        </div>
-                        <div class="report-priority priority-${report.priority}">
-                            ${report.priority.toUpperCase()} PRIORITY
-                        </div>
-                    </div>
-                    
-                    <div class="report-content">
-                        <p class="report-desc">${report.description}</p>
-                        
-                        <div class="report-media">
-                            ${generateMediaPlaceholders(report.media)}
-                        </div>
-                    </div>
-                    
-                    <div class="report-meta">
-                        <span><i class="far fa-clock"></i> ${report.date}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> ${report.location}</span>
-                    </div>
-                    
-                    <div class="report-actions">
-                        <button class="action-btn btn-primary view-details" data-id="${report.id}">
-                            <i class="fas fa-eye"></i> View Details
-                        </button>
-                        <button class="action-btn btn-success quick-verify" data-id="${report.id}">
-                            <i class="fas fa-check"></i> Verify
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
-            
-            // Add event listeners to buttons
-            document.querySelectorAll('.view-details').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const reportId = parseInt(this.getAttribute('data-id'));
-                    openReportModal(reportId);
-                });
-            });
-            
-            document.querySelectorAll('.quick-verify').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const reportId = parseInt(this.getAttribute('data-id'));
-                    verifyReport(reportId);
-                });
-            });
-        }
-        
-        // Get appropriate icon for hazard type
-        function getIconForType(type) {
-            const icons = {
-                "Coastal Flooding": "water",
-                "Marine Debris": "trash",
-                "Beach Erosion": "mountain",
-                "High Waves": "wave-square",
-                "Unusual Tides": "tint"
-            };
-            
-            return icons[type] || "exclamation-triangle";
-        }
-        
-        // Generate media placeholders
-        function generateMediaPlaceholders(count) {
-            let html = '';
-            for (let i = 0; i < 3; i++) {
-                if (i < count) {
-                    html += `<div class="media-item">
-                        <i class="fas fa-camera media-placeholder"></i>
-                    </div>`;
-                } else {
-                    html += `<div class="media-item" style="opacity:0.3;">
-                        <i class="far fa-image media-placeholder"></i>
-                    </div>`;
-                }
-            }
-            return html;
-        }
-        
-        // Open report modal
-        function openReportModal(reportId) {
-            const report = reports.find(r => r.id === reportId);
-            if (!report) return;
-            
-            document.getElementById('modal-type').textContent = report.type;
-            document.getElementById('modal-priority').textContent = report.priority;
-            document.getElementById('modal-location').textContent = report.location;
-            document.getElementById('modal-date').textContent = report.date;
-            document.getElementById('modal-desc').textContent = report.description;
-            document.getElementById('modal-ai').textContent = `Our deep learning model has classified this report as high-confidence (${report.aiConfidence} match with ${report.type.toLowerCase()} patterns).`;
-            
-            // Set modal media
-            const mediaContainer = document.getElementById('modal-media');
-            mediaContainer.innerHTML = '';
-            
-            for (let i = 0; i < report.media; i++) {
-                const mediaItem = document.createElement('div');
-                mediaItem.className = 'modal-media-item';
-                mediaItem.innerHTML = `<i class="fas fa-camera" style="font-size: 2rem;"></i>`;
-                mediaContainer.appendChild(mediaItem);
-            }
-            
-            document.getElementById('report-modal').classList.add('show');
-        }
-        
-        // Verify a report
-        function verifyReport(reportId) {
-            if (confirm('Are you sure you want to verify this report?')) {
-                // In a real app, this would send a request to the server
-                showNotification('Report Verified', `Report #${reportId} has been verified successfully!`, 'success');
-                
-                // Remove the report from the list
-                const index = reports.findIndex(r => r.id === reportId);
-                if (index !== -1) {
-                    reports.splice(index, 1);
-                    renderReports();
-                    renderUserReports();
-                }
-            }
-        }
-        
-        // Show notification
-        function showNotification(title, message, type = 'info') {
-            const notificationCenter = document.getElementById('notification-center');
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            
-            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
-            
-            notification.innerHTML = `
-                <div class="notification-icon">
-                    <i class="fas fa-${icon}"></i>
-                </div>
-                <div class="notification-content">
-                    <div class="notification-title">${title}</div>
-                    <div class="notification-desc">${message}</div>
-                </div>
-                <button class="notification-close">&times;</button>
-            `;
-            
-            notificationCenter.appendChild(notification);
-            
-            // Show notification
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 100);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 5000);
-            
-            // Close button functionality
-            notification.querySelector('.notification-close').addEventListener('click', function() {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            });
-        }
-        
-        // Close modal
-        document.getElementById('modal-close').addEventListener('click', function() {
-            document.getElementById('report-modal').classList.remove('show');
-        });
-        
-        // Verify button in modal
-        document.getElementById('verify-btn').addEventListener('click', function() {
-            // This would use the currently viewed report ID in a real implementation
-            showNotification('Report Verified', 'The coastal hazard report has been verified successfully!', 'success');
-            document.getElementById('report-modal').classList.remove('show');
-        });
-        
-        // Reject button in modal
-        document.getElementById('reject-btn').addEventListener('click', function() {
-            if (confirm('Are you sure you want to reject this report?')) {
-                showNotification('Report Rejected', 'The report has been rejected and removed from the queue.', 'error');
-                document.getElementById('report-modal').classList.remove('show');
-            }
-        });
-        
-        // Simulate new report button
-        document.getElementById('simulate-btn').addEventListener('click', function() {
-            const hazardTypes = ["Coastal Flooding", "Marine Debris", "Beach Erosion", "High Waves", "Unusual Tides"];
-            const randomType = hazardTypes[Math.floor(Math.random() * hazardTypes.length)];
-            
-            showNotification('New Report Submitted', `A new ${randomType} report has been submitted for verification.`, 'info');
-        });
-        
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            renderReports();
-            renderUserReports();
-            
-            // Show disaster info panel after 3 seconds
-            setTimeout(() => {
-                document.getElementById('disaster-info').classList.add('show');
-            }, 3000);
-            
-            // Close disaster info
-            document.getElementById('disaster-close').addEventListener('click', function() {
-                document.getElementById('disaster-info').classList.remove('show');
-            });
-            
-            // Filter functionality
-            document.getElementById('hazard-filter').addEventListener('change', applyFilters);
-            document.getElementById('priority-filter').addEventListener('change', applyFilters);
-            document.getElementById('status-filter').addEventListener('change', applyFilters);
-        });
-        
-        // Apply filters (simplified for demo)
-        function applyFilters() {
-            // In a real application, this would filter the reports
-            console.log('Filters applied');
-        }
-    </script>
 </body>
 </html>
